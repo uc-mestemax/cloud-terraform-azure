@@ -3,13 +3,14 @@
 
 ## High Level Overview
 
-flowchart TD
-    A[Terraform] -->|Provisions Azure Virtual Machine and Dependencies| B(Ansible Install)
+``` mermaid
+Components of my Project
+ A[Terraform] -->|Provisions Azure Virtual Machine and Dependencies| B(Ansible Install)
     B --> C{Ansible Playbook}
     C -->|One| D[Wireguard VPN]
     C -->|Two| E[Hashicorp Vault]
     C -->|Three| F[fa:fa-car Off to the Races!]
-  
+```
 
 ## Interacting With My Vault
 
