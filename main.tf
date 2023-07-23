@@ -40,13 +40,14 @@ resource "azurerm_linux_virtual_machine" "virtual-machine" {
   location            = azurerm_resource_group.rg.location
   size                = "Standard_B1ls"
   admin_username      = "adminuser"
+  custom_data = filebase64("./cloud-init.sh")
   network_interface_ids = [
     azurerm_network_interface.nic.id,
   ]
 
   admin_ssh_key {
     username   = "adminuser"
-    public_key = file("C:\\Users\\alex_\\Downloads\\testing.pub")
+    public_key = file("./hashicorp-azure-vm.pub")
   }
 
 # Should be demoted to a HDD if using permanently
@@ -61,7 +62,13 @@ resource "azurerm_linux_virtual_machine" "virtual-machine" {
     sku       = "20_04-lts"
     version   = "latest"
   }
-}
+
+ }
+  # provisioner "local-exec" {
+  #   command = "ansible-playbook -i '${azurerm_virtual_machine.example.private_ip},' -u adminuser -e 'ansible_python_interpreter=/usr/bin/python3' install_ansible.yml"
+  #   working_dir = path.module
+  # }
+
 
 resource "azurerm_public_ip" "public_ip" {
   name                = "PublicIP"

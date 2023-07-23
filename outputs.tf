@@ -3,5 +3,5 @@ output "resource_group_name" {
 }
 
 output "connect_ip" {
-  value = azurerm_public_ip.public_ip.ip_address
+  value = azurerm_public_ip.public_ip.id
 }

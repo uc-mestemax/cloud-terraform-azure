@@ -1,11 +1,10 @@
 # Hashicorp Vault Provisioning
 
-
 ## High Level Overview
 
 ``` mermaid
 Components of my Project
-    A[Terraform] -->|Provisions Azure Virtual Machine and Dependencies| B(Ansible Install)
+    A[Terraform] -->|Provisions Azure Virtual Machine and Dependencies| B(Fires off Cloud Init Script)
     B --> C{Ansible Playbook}
     C -->|One| D[Wireguard VPN]
     C -->|Two| E[Hashicorp Vault]
@@ -38,4 +37,6 @@ az login
 ..\terraform.exe apply
 ```
 
+### Noteworthy Sources I Referenced
 
+- https://sbulav.github.io/terraform/terraform-azurerm-compute-custom-data/

@@ -1,0 +1,37 @@
+---
+- name: Install Ansible
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Install dependencies
+      apt:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+          - software-properties-common
+
+    - name: Add Ansible repository (Ubuntu)
+      apt_repository:
+        repo: "ppa:ansible/ansible"
+
+    - name: Install Ansible
+      apt:
+        name: ansible
+        state: latest
+      when: ansible_os_family == 'Debian'  # For Debian-based systems
+
+    - name: Add Ansible repository (RHEL)
+      yum_repository:
+        name: ansible
+        description: "Ansible repository"
+        baseurl: "https://releases.ansible.com/rpm/release/epel-$releasever/x86_64/"
+        gpgcheck: no
+
+    - name: Install Ansible
+      yum:
+        name: ansible
+        state: latest
+      when: ansible_os_family == 'RedHat'  # For Red Hat-based systems
