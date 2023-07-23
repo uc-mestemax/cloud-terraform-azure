@@ -2,8 +2,8 @@
 
 ## High Level Overview
 
-``` mermaid
-Components of my Project
+```mermaid
+flowchart TD
     A[Terraform] -->|Provisions Azure Virtual Machine and Dependencies| B(Fires off Cloud Init Script)
     B --> C{Ansible Playbook}
     C -->|One| D[Wireguard VPN]

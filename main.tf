@@ -40,7 +40,7 @@ resource "azurerm_linux_virtual_machine" "virtual-machine" {
   location            = azurerm_resource_group.rg.location
   size                = "Standard_B1ls"
   admin_username      = "adminuser"
-  custom_data = filebase64("./cloud-init.sh")
+  custom_data = base64encode(templatefile("./template.tmpl", {"public_ip" = azurerm_public_ip.public_ip.ip_address}))
   network_interface_ids = [
     azurerm_network_interface.nic.id,
   ]
@@ -75,6 +75,15 @@ resource "azurerm_public_ip" "public_ip" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   allocation_method   = "Dynamic"
+}
+
+# This was one way to define a template file. Template 
+data "template_file" "cloud-init" {
+  template = file("./template.tmpl")
+   vars = {
+    "public_ip" = azurerm_public_ip.public_ip.ip_address
+  }
+  
 }
 
 # resource "azurerm_network_interface_security_group_association" "association" {
