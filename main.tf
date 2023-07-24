@@ -40,7 +40,7 @@ resource "azurerm_linux_virtual_machine" "virtual-machine" {
   location            = azurerm_resource_group.rg.location
   size                = "Standard_B1ls"
   admin_username      = "adminuser"
-  custom_data = base64encode(templatefile("./template.tmpl", {"public_ip" = data.azurerm_public_ip.connect_ip.name}))
+  custom_data = base64encode(templatefile("./template.tmpl", {"public_ip" = data.azurerm_public_ip.connect_ip.ip_address}))
   network_interface_ids = [
     azurerm_network_interface.nic.id,
   ]
