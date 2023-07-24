@@ -68,7 +68,7 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
         state: present
 
     - name: Generate WireGuard private key
-      command: "umask 077 && wg genkey | tee {{ wireguard_private_key_path }}"
+      shell: "touch /etc/wireguard/privatekey /etc/wireguard/publickey && chmod 777 /etc/wireguard && wg genkey | tee {{ wireguard_private_key_path }}"
       register: wireguard_private_key
       changed_when: wireguard_private_key.rc == 0
 
@@ -120,4 +120,4 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
         state: restarted
 EOF
 
-
+/home/adminuser/ansible-playbook.yaml

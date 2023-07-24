@@ -4,7 +4,8 @@ sudo apt-get update
 sudo apt-get install -y software-properties-common
 sudo apt-get install -y ansible
 
-echo "HELLO WORLD!"
+echo "Begin Initialization"
+echo "---------------------"
 
 touch /home/adminuser/ansible-playbook.yaml
 
@@ -58,7 +59,7 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
     wireguard_interface_name: wg0
     wireguard_private_key_path: /etc/wireguard/privatekey
     wireguard_public_key_path: /etc/wireguard/publickey
-    wireguard_endpoint: #{azurerm_public_ip.public_ip.ip_address}:51820
+    wireguard_endpoint: ${azurerm_public_ip}:51820
     wireguard_allowed_ips: 10.0.0.0/24  # Replace this with your desired client subnet
 
   tasks:

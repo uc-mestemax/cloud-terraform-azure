@@ -25,7 +25,7 @@ resource "azurerm_network_interface" "nic" {
   name                = "nic"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-
+# Should determine why dynamic IPs won't work.... for some reason variables aren't referenced properly because the IP is created after the VM..
   ip_configuration {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.subnet.id
@@ -40,7 +40,7 @@ resource "azurerm_linux_virtual_machine" "virtual-machine" {
   location            = azurerm_resource_group.rg.location
   size                = "Standard_B1ls"
   admin_username      = "adminuser"
-  custom_data = base64encode(templatefile("./template.tmpl", {"public_ip" = azurerm_public_ip.public_ip.ip_address}))
+  custom_data = base64encode(templatefile("./template.tmpl", {"public_ip" = data.azurerm_public_ip.connect_ip.name}))
   network_interface_ids = [
     azurerm_network_interface.nic.id,
   ]
@@ -77,13 +77,20 @@ resource "azurerm_public_ip" "public_ip" {
   allocation_method   = "Dynamic"
 }
 
-# This was one way to define a template file. Template 
-data "template_file" "cloud-init" {
-  template = file("./template.tmpl")
-   vars = {
-    "public_ip" = azurerm_public_ip.public_ip.ip_address
-  }
-  
+# This was one way to define a template file. Not entirely sure how to base64 encode an element like this. 
+# data "template_file" "cloud-init" {
+#   template = file("./template.tmpl")
+#    vars = {
+#     "public_ip" = azurerm_public_ip.public_ip.ip_address
+#   }
+# }
+
+# In an effort to fix https://github.com/hashicorp/terraform-provider-azurerm/issues/764
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/public_ip.html
+
+data "azurerm_public_ip" "connect_ip" {
+  name = azurerm_public_ip.public_ip.name
+  resource_group_name = azurerm_resource_group.rg.name
 }
 
 # resource "azurerm_network_interface_security_group_association" "association" {
