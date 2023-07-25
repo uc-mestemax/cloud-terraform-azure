@@ -74,7 +74,7 @@ resource "azurerm_public_ip" "public_ip" {
   name                = "PublicIP"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
 }
 
 # This was one way to define a template file. Not entirely sure how to base64 encode an element like this. 

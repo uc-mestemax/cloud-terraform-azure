@@ -59,7 +59,7 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
     wireguard_private_key_path: /etc/wireguard/privatekey
     wireguard_public_key_path: /etc/wireguard/publickey
     wireguard_endpoint: ${public_ip}:51820
-    wireguard_allowed_ips: 10.0.0.0/24  # Replace this with your desired client subnet
+    wireguard_allowed_ips: 172.16.0.1/24  # Replace this with your desired client subnet
 
   tasks:
     - name: Install WireGuard package
@@ -73,7 +73,7 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
       changed_when: wireguard_private_key.rc == 0
 
     - name: Generate WireGuard public key
-      command: "echo {{ wireguard_private_key.stdout }} | wg pubkey | tee {{ wireguard_public_key_path }}"
+      shell: "cat {{ wireguard_private_key.stdout }} | wg pubkey | tee {{ wireguard_public_key_path }}"
       when: wireguard_private_key.changed
 
     - name: Configure WireGuard interface
@@ -82,16 +82,24 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
         create: yes
         line: |
           [Interface]
-          PrivateKey = {{ lookup('file', wireguard_private_key_path) }}
-          Address = {{ wireguard_allowed_ips }}
-          ListenPort = 51820
+          PrivateKey={{ lookup('file', wireguard_private_key_path) }}
+          Address={{ wireguard_allowed_ips }}
+          ListenPort=51820
+          PostUp=iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE;
+          PostDown=iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE;
+
+          [Peer]
+          PublicKey=0KJMeutHCHEdqe3nh5TWs6oa9yioQ2rD2P6m7GiGjQs=
+          AllowedIPs = 172.16.0.2/32
+
+
 
       notify: Restart WireGuard
 
-    - name: Add WireGuard endpoint configuration
-      lineinfile:
-        path: /etc/wireguard/{{ wireguard_interface_name }}.conf
-        line: "Endpoint = {{ wireguard_endpoint }}"
+    # - name: Add WireGuard endpoint configuration
+    #   lineinfile:
+    #     path: /etc/wireguard/{{ wireguard_interface_name }}.conf
+    #     line: "Endpoint={{ wireguard_endpoint }}"
 
       notify: Restart WireGuard
 
@@ -118,4 +126,64 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
       systemd:
         name: "wg-quick@{{ wireguard_interface_name }}"
         state: restarted
+
+- name: Install Docker
+  hosts: localhost
+  become: yes
+
+  tasks:
+    - name: Update apt package cache (for Debian/Ubuntu)
+      apt:
+        update_cache: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: Install required packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg
+        - software-properties-common
+      when: ansible_os_family == 'Debian'
+
+    - name: Add Docker GPG key (for Debian/Ubuntu)
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Add Docker repository (for Debian/Ubuntu)
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Install Docker (for Debian/Ubuntu)
+      apt:
+        name: docker-ce
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+      when: ansible_os_family == 'Debian'
+
+EOF
+
+cat > /home/adminuser/wg0.conf <<- EOF
+ [Interface]
+  PrivateKey={{ lookup('file', wireguard_private_key_path) }}
+  Address={{ wireguard_allowed_ips }}
+  ListenPort=51820
+  PostUp=iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE;
+  PostDown=iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERA
+  [Peer]
+  PublicKey=0KJMeutHCHEdqe3nh5TWs6oa9yioQ2rD2P6m7GiGjQs=
+  AllowedIPs = 172.16.0.2/32
 EOF
