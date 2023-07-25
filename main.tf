@@ -38,7 +38,9 @@ resource "azurerm_linux_virtual_machine" "virtual-machine" {
   name                = "lightweight-vm"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  size                = "Standard_B1ls"
+  # size                = "Standard_B1ls"
+  # size                = "Standard_B1ms"
+  size                = "Standard_B1s"
   admin_username      = "adminuser"
   custom_data = base64encode(templatefile("./template.tmpl", {"public_ip" = data.azurerm_public_ip.connect_ip.ip_address}))
   network_interface_ids = [
