@@ -20,6 +20,7 @@ sudo apt-get install -y ansible
 echo "Deploying Ansible Prerequisites and Playbooks"
 
 touch /home/adminuser/ansible-playbook.yaml
+mkdir /home/adminuser/bindmount
 
 cat > /home/adminuser/ansible-playbook.yaml <<- EOF
 ---
@@ -102,7 +103,7 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
     #       PostDown=iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE;
 
     #       [Peer]
-    #       PublicKey=0KJMeutHCHEdqe3nh5TWs6oa9yioQ2rD2P6m7GiGjQs=
+    #       PublicKey=f3dVzWZD7fp7fZu/XtoO9jgJK7LiQkabySo1ilQEqHY=
     #       AllowedIPs = 172.16.0.2/32
     - name: Generate WireGuard configuration
       template:
@@ -187,6 +188,45 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
         enabled: yes
       when: ansible_os_family == 'Debian'
 
+    - name: Install Python3-pip
+      apt:
+        name: python3-pip
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install Python3-pip
+      yum:
+        name: python3-pip
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Docker Python module
+      pip:
+        name: docker
+        state: present
+
+- name: Pull and run a Docker image
+  hosts: localhost
+  become: true
+  
+  tasks:
+      - name: Pull Docker image
+        docker_image:
+          name: hashicorp/vault:latest
+          source: pull
+
+      - name: Run Docker container
+        docker_container:
+          name: hashicorp-vault
+          image: hashicorp/vault:latest
+          state: started
+          ports:
+            - "8200:8200"  # Maps host_port to container_port
+          volumes:
+            - "/home/adminuser/bindmount:/vault/config.d"  # Mount host directory into container
+          env:
+            VAULT_DEV_ROOT_TOKEN_ID: "myroottoken"
+
 EOF
 
 cat > /home/adminuser/wg0.conf <<- EOF
@@ -195,9 +235,9 @@ cat > /home/adminuser/wg0.conf <<- EOF
   Address={{ wireguard_allowed_ips }}
   ListenPort=51820
   PostUp=iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE;
-  PostDown=iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERA
+  PostDown=iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE;
   [Peer]
-  PublicKey=0KJMeutHCHEdqe3nh5TWs6oa9yioQ2rD2P6m7GiGjQs=
+  PublicKey=f3dVzWZD7fp7fZu/XtoO9jgJK7LiQkabySo1ilQEqHY=
   AllowedIPs = 172.16.0.2/32
 EOF
 
@@ -208,3 +248,4 @@ sudo groupadd docker
 sudo usermod -aG docker adminuser
 sudo newgrp docker
 
+ansible-playbook /home/adminuser/ansible-playbook.yaml

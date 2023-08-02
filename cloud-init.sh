@@ -121,4 +121,4 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
         state: restarted
 EOF
 
-
+ansible-playbook /home/adminuser/ansible-playbook.yml
