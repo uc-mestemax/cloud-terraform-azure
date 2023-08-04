@@ -217,7 +217,7 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
 
       - name: Run Docker container
         docker_container:
-          name: hashicorp-vault
+          name: hashicorp-vault-1
           image: hashicorp/vault:latest
           state: started
           ports:
@@ -226,6 +226,31 @@ cat > /home/adminuser/ansible-playbook.yaml <<- EOF
             - "/home/adminuser/bindmount:/vault/config.d"  # Mount host directory into container
           env:
             VAULT_DEV_ROOT_TOKEN_ID: "myroottoken"
+
+      - name: Run Docker container
+        docker_container:
+          name: hashicorp-vault-2
+          image: hashicorp/vault:latest
+          state: started
+          ports:
+            - "8201:8201"  # Maps host_port to container_port
+          volumes:
+            - "/home/adminuser/bindmount:/vault/config.d"  # Mount host directory into container
+          env:
+            VAULT_DEV_ROOT_TOKEN_ID: "myroottoken"
+
+      - name: Run Docker container
+        docker_container:
+          name: hashicorp-vault-3
+          image: hashicorp/vault:latest
+          state: started
+          ports:
+            - "8202:8202"  # Maps host_port to container_port
+          volumes:
+            - "/home/adminuser/bindmount:/vault/config.d"  # Mount host directory into container
+          env:
+            VAULT_DEV_ROOT_TOKEN_ID: "myroottoken"
+            
 
 EOF
 
@@ -249,3 +274,11 @@ sudo usermod -aG docker adminuser
 sudo newgrp docker
 
 ansible-playbook /home/adminuser/ansible-playbook.yaml
+
+cat > /home/adminuser/automate-hashicorp-vault-cluster.sh <<- EOF
+  mkdir $HOME/vault-tutorial && cd $HOME/vault-tutorial
+  git clone https://github.com/hashicorp-education/learn-vault-raft.git
+  cd learn-vault-raft/raft-storage/local
+  chmod +x cluster.sh
+EOF
+

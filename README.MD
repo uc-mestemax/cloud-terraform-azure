@@ -40,3 +40,16 @@ az login
 ### Noteworthy Sources I Referenced
 
 - https://sbulav.github.io/terraform/terraform-azurerm-compute-custom-data/
+- Production Hardening | Vault | HashiCorp Developer
+
+
+- Passing Custom Data to Terraform Azure RM Compute Module - Cloud Alchemist (sbulav.github.io)
+- What are Terraform Templates? Examples and Use Cases (spacelift.io)
+- Using templatefile in Terraform - YouTube
+- azurerm_public_ip | Data Sources | hashicorp/azurerm | Terraform | Terraform Registry
+- https://hub.packtpub.com/what-is-hcl-hashicorp-configuration-language-how-does-it-relate-to-terraform-and-why-is-it-growing-in-popularity/
+
+- Note Dynamic - Public IP Addresses aren't allocated until they're assigned to a resource (such as a Virtual Machine or a Load Balancer) by design within Azure.
+
+
+
